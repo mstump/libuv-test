@@ -16,22 +16,7 @@ set (libuv-test_VERSION_STRING ${libuv-test_VERSION_MAJOR}.${libuv-test_VERSION_
 set(EXT_PREFIX ${PROJECT_SOURCE_DIR}/ext)
 set(CMAKE_MODULE_PATH ${EXT_PREFIX})
 
-# OS specific lib stuff
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-  set(Boost_USE_STATIC_LIBS ON)
-  set(Boost_USE_STATIC_RUNTIME ON)
-else()
-  set(Boost_USE_STATIC_LIBS OFF)
-  set(Boost_USE_STATIC_RUNTIME OFF)
-endif()
-
-# Boost
-set(Boost_USE_MULTITHREADED ON)
-find_package(Boost 1.47.0 )
-set(INCLUDES ${INCLUDES} ${Boost_INCLUDE_DIRS} )
-set(LIBS ${LIBS} ${Boost_LIBRARIES} )
-
-# v8
+# libuv
 set(LIBUV_INCLUDE_NAMES uv.h)
 set(LIBUV_LIBRARY_NAMES libuv.dylib)
 
@@ -59,8 +44,6 @@ set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 
 include_directories(${INCLUDES} ${PROJECT_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/src)
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
-file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.c)
-
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 
 target_link_libraries(${PROJECT_LIB_NAME} ${LIBS})
@@ -69,7 +52,7 @@ SET_TARGET_PROPERTIES(${PROJECT_LIB_NAME} PROPERTIES VERSION ${libuv-test_VERSIO
 #-------------------------------------------------------------------------------
 # Set compiler flags
 #-------------------------------------------------------------------------------
-set(PROJECT_COMPILER_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -pedantic -Wextra -Werror -Wno-long-long")
+set(PROJECT_COMPILER_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -fPIC -Wall -pedantic -Wextra -Werror -Wno-long-long")
 
 set_property(
   TARGET ${PROJECT_NAME}
