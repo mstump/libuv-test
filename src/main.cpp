@@ -9,6 +9,8 @@
 #include <iostream>
 #include <thread>
 
+#include <uv.h>
+
 template<typename T>
 class spsc_queue_t
 {
@@ -17,7 +19,10 @@ public:
     spsc_queue_t() :
         _head(reinterpret_cast<buffer_node_t*>(new buffer_node_aligned_t)),
         _tail(_head.load(std::memory_order_relaxed))
-    {}
+    {
+        buffer_node_t* front = _head.load(std::memory_order_relaxed);
+        front->next.store(NULL, std::memory_order_relaxed);
+    }
 
     ~spsc_queue_t()
     {
@@ -61,16 +66,11 @@ private:
 
     struct buffer_node_t
     {
-        buffer_node_t() :
-            next(NULL)
-        {}
-
         std::atomic<buffer_node_t*> next;
         T                           data;
     };
 
     typedef typename std::aligned_storage<sizeof(buffer_node_t), std::alignment_of<buffer_node_t>::value>::type buffer_node_aligned_t;
-
 
     std::atomic<buffer_node_t*> _head;
     std::atomic<buffer_node_t*> _tail;
@@ -80,18 +80,52 @@ private:
 };
 
 
+struct context_t {
+    spsc_queue_t<int> caller_input;
+    uv_loop_t*        caller_loop;
+    std::thread*      caller_thread;
+
+    spsc_queue_t<int> worker_output;
+    uv_loop_t*        worker_loop;
+    std::thread*      worker_thread;
+
+    context_t() :
+        caller_loop(uv_loop_new()),
+        worker_loop(uv_loop_new())
+    {}
+
+    ~context_t()
+    {
+        uv_stop(worker_loop);
+        uv_stop(caller_loop);
+        worker_thread->join();
+        caller_thread->join();
+
+        delete worker_thread;
+        delete caller_thread;
+        delete worker_loop;
+        delete caller_loop;
+    }
+
+    void
+    init()
+    {
+        worker_thread = new std::thread(context_t::run_loop, worker_loop);
+        caller_thread = new std::thread(context_t::run_loop, caller_loop);
+    }
+
+private:
+    static void
+    run_loop(uv_loop_t* loop)
+    {
+        uv_run(loop, UV_RUN_DEFAULT);
+    }
+
+};
+
 int
 main()
 {
-    spsc_queue_t<int>* buffer = new spsc_queue_t<int>();
-    buffer->enqueue(0);
-    buffer->enqueue(1);
-    buffer->enqueue(2);
-    buffer->enqueue(3);
-
-    int output = -1;
-    std::cout << "value 0: " << buffer->dequeue(output) << " " << output << std::endl;
-    std::cout << "value 1: " << buffer->dequeue(output) << " " << output << std::endl;
-    std::cout << "value 2: " << buffer->dequeue(output) << " " << output << std::endl;
-    delete buffer;
+    context_t c;
+    c.init();
 }
