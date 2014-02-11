@@ -374,9 +374,12 @@ private:
 //
 //  this code is to demonstrate how to expose C++ classes via opaque C structures and C functions
 //
-//  this methodology provides several benefits: eliminates the C++ ABI problem, prevents implementation details
-//  from leaking into customer code, and allows us to modify implementation details with
-//  forcing customers to recompile
+//  this methodology provides several benefits: eliminates the C++ ABI problem, prevents
+//  implementation details from leaking into customer code, and allows us to modify implementation
+//  details with forcing customers to recompile.
+//
+//  If you don't want to constantly cast between void* and the implementation types you can define
+//  an incomplete type in the headers exposed to the customer.
 //
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
