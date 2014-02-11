@@ -1,6 +1,6 @@
 ## Description
 
-This is an app that demonstratates several ideas.
+[The Code](src/main.cpp) demonstratates several ideas.
 
  1. Communication between caller code and an event loop through a lock free queue. This eliminates the need for intrusive fine-grain locking.
  1. The implementation of futures/promises through by way of a condition variable.
@@ -17,5 +17,3 @@ This is an app that demonstratates several ideas.
 ```
 cmake -DCMAKE_BUILD_TYPE=Debug && make && ./build/bin/libuv-test
 ```
-
-### [The Code](src/main.cpp)
